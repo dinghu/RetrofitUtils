@@ -1,5 +1,5 @@
 # RetrofitUtils
-RetrofitUtils 快速集成Retrofit+okhtp，不使用rxjava
+RetrofitUtils 几行代码快速集成Retrofit+okhtp，不使用rxjava
 
 
 调用方式：
