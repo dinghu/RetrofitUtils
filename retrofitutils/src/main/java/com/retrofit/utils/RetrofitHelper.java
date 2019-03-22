@@ -14,6 +14,7 @@ import com.retrofit.utils.upload.UploadFileRequestBody;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -130,6 +131,26 @@ public class RetrofitHelper {
         return false;
     }
 
+    private <T> void syncCall(Call<ResponseBody> call, HttpCallback<T> callback) {
+        try {
+            Response<ResponseBody> response = call.execute();
+            if (response.isSuccessful()) {
+                String body = response.body().string();
+                Type type = callback.getGenericityType();
+                if (type == String.class) {
+                    callback.onResponse((T) body);
+                } else {
+                    T target = gson.fromJson(body, type);
+                    callback.onResponse(target);
+                }
+            } else {
+                callback.onError("-1", response.message());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private <T> void enqueueCall(Call<ResponseBody> call, final HttpCallback<T> observer) {
         call.enqueue(new Callback<ResponseBody>() {
             @Override
@@ -137,8 +158,14 @@ public class RetrofitHelper {
                 try {
                     if (response.isSuccessful()) {
                         String body = response.body().string();
-                        T target = gson.fromJson(body, observer.getGenericityType());
-                        observer.onResponse(target);
+                        Type type = observer.getGenericityType();
+                        if (type == String.class) {
+                            observer.onResponse((T) body);
+                        } else {
+                            T target = gson.fromJson(body, type);
+                            observer.onResponse(target);
+                        }
+
                     } else {
                         observer.onError("" + response.code(), response.errorBody().string());
                     }
@@ -214,18 +241,7 @@ public class RetrofitHelper {
 
     public <T> void syncPost(String url, Map<String, Object> parameters, HttpCallback<T> callback) {
         Call<ResponseBody> call = commonCall.doPost(url, parameters);
-        try {
-            Response<ResponseBody> response = call.execute();
-            if (response.isSuccessful()) {
-                String body = response.body().string();
-                T target = gson.fromJson(body, callback.getGenericityType());
-                callback.onResponse(target);
-            } else {
-                callback.onError("-1", response.message());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        syncCall(call, callback);
     }
 
     public <T> void postFullPath(String fullUrl, Map<String, Object> parameters, HttpCallback<T> callback) {
@@ -246,23 +262,12 @@ public class RetrofitHelper {
 
 
     public <T> void syncGet(String url, Map<String, Object> parameters, HttpCallback<T> callback) {
-        Call<ResponseBody> call = commonCall.doGet(url, parameters);
         if (parameters == null || parameters.isEmpty()) {
-            call = commonCall.doGet(url);
-            enqueueCall(call, callback);
-        }
-
-        try {
-            Response<ResponseBody> response = call.execute();
-            if (response.isSuccessful()) {
-                String body = response.body().string();
-                T target = gson.fromJson(body, callback.getGenericityType());
-                callback.onResponse(target);
-            } else {
-                callback.onError("-1", response.message());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+            Call<ResponseBody> call = commonCall.doGet(url);
+            syncCall(call, callback);
+        } else {
+            Call<ResponseBody> call = commonCall.doGet(url, parameters);
+            syncCall(call, callback);
         }
     }
 

@@ -2,6 +2,7 @@ package com.retrofit.utils.demo;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.retrofit.utils.Configuration;
@@ -30,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(String response) {
-
+                Log.i("kv",response);
             }
         });
 
