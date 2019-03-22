@@ -3,6 +3,7 @@ RetrofitUtils 快速集成Retrofit+okhtp，不使用rxjava
 
 
 调用方式：
+         
         Configuration.Builder builder = new Configuration.Builder();
         builder.baseUrl("https://www.baidu.com").context(this);
         
